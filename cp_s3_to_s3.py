@@ -6,7 +6,6 @@ import argparse
 import time
 from datetime import timedelta
 import logging
-#import logging.handlers
 from logging.handlers import RotatingFileHandler
 from vars import *
 
@@ -60,6 +59,7 @@ for line in lines:
     destination_file_path = line.split('/')[5]
 
     try:
+        print 'Processing: '+source_file_path+'/'+source_file_name
         conn_orig.download_file(orig_bucket_name,
                                 source_file_path+'/'+source_file_name,
                                 source_file_name)
@@ -68,9 +68,9 @@ for line in lines:
                              dest_pre_path+destination_file_path+'/'+source_file_name)
         os.remove(source_file_name)
     except Exception, e:
-        logger.info('FAIL: '+source_file+' :: '+source_file_path+'/'+source_file_name)
-        logger.error('Dump message: '+ str(e))
+        my_logger.info('FAIL: '+source_file+' :: '+source_file_path+'/'+source_file_name)
+        my_logger.error('Dump message: '+ str(e))
 
 total_time = 'Process time: ' + str(timedelta(seconds=time.time() - start_time))
-logger.info(total_time)
+my_logger.info(str(args)+' :total_time: '+total_time)
 print total_time
