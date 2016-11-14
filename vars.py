@@ -7,4 +7,8 @@ orig_aws_secret_access_key = "XXX"
 # vars: buckets
 orig_bucket_name = 'source-bucket'
 dest_bucket_name = 'destination-bucket'
+dest_bucket_zone = 'eu-west-1'
 dest_pre_path = 'pre_path_folder/'
+
+log_file = 'cp_s3_to_s3.log'
+# source_file = 'file_list.txt'

@@ -5,6 +5,9 @@ from botocore.client import Config
 import argparse
 import time
 from datetime import timedelta
+import logging
+#import logging.handlers
+from logging.handlers import RotatingFileHandler
 from vars import *
 
 start_time = time.time()
@@ -16,8 +19,17 @@ parser.add_argument('filename', metavar='path/filename', type=str, nargs=1,
 args = parser.parse_args()
 source_file = args.filename[0]
 
+# log
+my_logger = logging.getLogger(source_file)
+my_logger.setLevel(logging.INFO)
+my_handler = logging.handlers.RotatingFileHandler(
+              log_file, maxBytes=10485760, backupCount=100000)
+my_handler.setLevel(logging.INFO)
+my_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+my_logger.addHandler(my_handler)
+
 # connection to aws s3 accounts
-conn_dest = boto3.client('s3', 'eu-west-1', use_ssl=True, verify=None,
+conn_dest = boto3.client('s3', dest_bucket_zone, use_ssl=True, verify=None,
                             aws_access_key_id=dest_aws_access_key_id,
                             aws_secret_access_key=dest_aws_secret_access_key,
                             config=Config(s3={'addressing_style': 'path'}))
@@ -38,21 +50,27 @@ except botocore.exceptions.ClientError as e:
 
 if not exists:
     conn_dest.create_bucket(Bucket=dest_bucket_name,
-                               CreateBucketConfiguration={'LocationConstraint': 'eu-west-1'})
+                               CreateBucketConfiguration={'LocationConstraint': dest_bucket_zone})
 
-# process
+# process: download, upload, delete
 lines = [line.rstrip('\n') for line in open(source_file)]
 for line in lines:
     source_file_name = os.path.basename(line)
     source_file_path = os.path.dirname(line)
     destination_file_path = line.split('/')[5]
 
-    conn_orig.download_file(orig_bucket_name,
-                              source_file_path+'/'+source_file_name,
-                              source_file_name)
-    conn_dest.upload_file(source_file_name,
+    try:
+        conn_orig.download_file(orig_bucket_name,
+                                source_file_path+'/'+source_file_name,
+                                source_file_name)
+        conn_dest.upload_file(source_file_name,
                              dest_bucket_name,
                              dest_pre_path+destination_file_path+'/'+source_file_name)
-    os.remove(source_file_name)
+        os.remove(source_file_name)
+    except Exception, e:
+        logger.info('FAIL: '+source_file+' :: '+source_file_path+'/'+source_file_name)
+        logger.error('Dump message: '+ str(e))
 
-print 'Process time: ' + str(timedelta(seconds=time.time() - start_time))
+total_time = 'Process time: ' + str(timedelta(seconds=time.time() - start_time))
+logger.info(total_time)
+print total_time
