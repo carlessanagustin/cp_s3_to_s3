@@ -22,7 +22,7 @@ source_file = args.filename[0]
 my_logger = logging.getLogger(source_file)
 my_logger.setLevel(logging.INFO)
 my_handler = logging.handlers.RotatingFileHandler(
-              log_file, maxBytes=10485760, backupCount=100000)
+              log_file, maxBytes=1048576*256, backupCount=5)
 my_handler.setLevel(logging.INFO)
 my_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 my_logger.addHandler(my_handler)
