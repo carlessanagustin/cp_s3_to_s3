@@ -6,6 +6,7 @@ import argparse
 import time
 from datetime import timedelta
 import logging
+from sys import exit
 from logging.handlers import RotatingFileHandler
 from vars import *
 
@@ -17,6 +18,20 @@ parser.add_argument('filename', metavar='path/filename', type=str, nargs=1,
                     help='Path and filename of the files to copy.')
 args = parser.parse_args()
 source_file = args.filename[0]
+
+
+def disk_usage(path):
+    '''% occupied hdd space'''
+    st = os.statvfs(path)
+    # free = (st.f_bavail * st.f_frsize)
+    total = (st.f_blocks * st.f_frsize)
+    used = (st.f_blocks - st.f_bfree) * st.f_frsize
+    try:
+        percent = (float(used) / total) * 100
+    except ZeroDivisionError:
+        percent = 0
+    return round(percent, 1)
+
 
 # log
 my_logger = logging.getLogger(source_file)
@@ -57,6 +72,10 @@ for line in lines:
     source_file_name = os.path.basename(line)
     source_file_path = os.path.dirname(line)
     destination_file_path = line.split('/')[5]
+
+    if disk_usage('/') >= max_pct:
+        my_logger.error('Disk space failure')
+        exit(0)
 
     try:
         print 'Processing: '+source_file_path+'/'+source_file_name
