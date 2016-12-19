@@ -92,5 +92,5 @@ for line in lines:
         exit(0)
 
 total_time = 'Process time: ' + str(timedelta(seconds=time.time() - start_time))
-my_logger.info(str(args)+' :total_time: '+total_time)
+my_logger.info(str(args)+' : '+total_time)
 print total_time
